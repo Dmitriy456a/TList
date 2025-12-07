@@ -1,0 +1,339 @@
+#pragma once
+
+#include <iostream>
+#include "TListNode.h"
+#include "TListIterator.h"
+
+const int MAX_SIZE = 10000;
+template <class T>
+class TList
+    {
+    protected:
+        size_t size;
+        TListNode<T>* root;
+    public:
+        TList();
+        TList(size_t size_);
+        TList(const TList<T>& l);
+        TList(TList<T>&& l);
+        ~TList();
+        size_t GetSize();
+        TListIterator<T> begin();
+        TListIterator<T> end();
+        void AddStart(T value);
+        void AddEnd(T value);
+        void Add(T value, int index);
+        T RemoveStart();
+        T RemoveEnd();
+        T Remove(int index);
+        bool IsEmpty();
+        bool IsFull();
+        TList<T> operator+(const TList<T>& l);
+        TList<T>& operator=(const TList<T>& l);
+        bool operator==(const TList<T>& l);
+        bool operator!=(const TList<T>& l);
+        T operator[](int index);
+};
+
+template<class T>
+inline TList<T>::TList()
+{
+    size = 0;
+    root = nullptr;
+}
+
+template<class T>
+inline TList<T>::TList(size_t size_)
+{
+    if (size_ > MAX_SIZE)
+        throw std::exception();
+    size = 0;
+    root = nullptr;
+    for (size_t i = 0; i < size_; i++)
+    {
+        AddEnd(T());
+    }
+}
+
+template<class T>
+inline TList<T>::TList(const TList<T>& l)
+{
+    size = 0;
+    root = nullptr;
+    if (l.size == 0) return;
+    TListNode<T>* cur = l.root;
+    for (size_t i = 0; i < l.size; i++)
+    {
+        AddEnd(cur->GetValue());
+        cur = cur->GetRight();
+    }
+}
+
+template<class T>
+inline TList<T>::TList(TList<T>&& l)
+{
+    size = l.size;
+    root = l.root;
+    l.size = 0;
+    l.root = nullptr;
+}
+
+template<class T>
+inline TList<T>::~TList()
+{
+    while (size > 0)
+    {
+        RemoveStart();
+    }
+}
+
+template<class T>
+inline TListIterator<T> TList<T>::end()
+{
+    return TListIterator<T>(nullptr);
+}
+
+template<class T>
+inline void TList<T>::AddStart(T value)
+{
+    if (size == MAX_SIZE)
+        throw std::exception();
+    TListNode<T>* newNode = new TListNode<T>(value);
+    if (size == 0)
+    {
+        root = newNode;
+        root->SetLeft(root);
+        root->SetRight(root);
+    }
+    else
+    {
+        TListNode<T>* last = root->GetLeft();
+        newNode->SetRight(root);
+        newNode->SetLeft(last);
+        root->SetLeft(newNode);
+        last->SetRight(newNode);
+        root = newNode;
+    }
+    size++;
+}
+
+template<class T>
+inline void TList<T>::AddEnd(T value)
+{
+    if (size == MAX_SIZE)
+        throw std::exception();
+    TListNode<T>* newNode = new TListNode<T>(value);
+    if (size == 0)
+    {
+        root = newNode;
+        root->SetLeft(root);
+        root->SetRight(root);
+    }
+    else
+    {
+        TListNode<T>* last = root->GetLeft();
+        newNode->SetRight(root);
+        newNode->SetLeft(last);
+        root->SetLeft(newNode);
+        last->SetRight(newNode);
+    }
+    size++;
+}
+
+template<class T>
+inline void TList<T>::Add(T value, int index)
+{
+    if (size == MAX_SIZE)
+        throw std::exception();
+    if (index < 0 || index > static_cast<int>(size))
+        throw std::exception();
+    if (index == 0)
+    {
+        AddStart(value);
+        return;
+    }
+    if (index == static_cast<int>(size))
+    {
+        AddEnd(value);
+        return;
+    }
+    TListNode<T>* cur = root;
+    for (int i = 0; i < index; i++)
+        cur = cur->GetRight();
+    TListNode<T>* newNode = new TListNode<T>(value);
+    TListNode<T>* prev = cur->GetLeft();
+    newNode->SetRight(cur);
+    newNode->SetLeft(prev);
+    prev->SetRight(newNode);
+    cur->SetLeft(newNode);
+    size++;
+}
+
+template<class T>
+inline size_t TList<T>::GetSize()
+{
+    return size;
+}
+
+template<class T>
+inline TListIterator<T> TList<T>::begin()
+{
+    return TListIterator<T>(root);
+}
+
+template<class T>
+inline T TList<T>::RemoveStart()
+{
+    if (size == 0)
+        throw std::exception();
+    T value = root->GetValue();
+    if (size == 1)
+    {
+        delete root;
+        root = nullptr;
+    }
+    else
+    {
+        TListNode<T>* newRoot = root->GetRight();
+        TListNode<T>* last = root->GetLeft();
+
+        newRoot->SetLeft(last);
+        last->SetRight(newRoot);
+
+        delete root;
+        root = newRoot;
+    }
+    size--;
+    return value;
+}
+
+template<class T>
+inline T TList<T>::RemoveEnd()
+{
+    if (size == 0)
+        throw std::exception();
+    if (size == 1)
+    {
+        return RemoveStart();
+    }
+    TListNode<T>* last = root->GetLeft();
+    T value = last->GetValue();
+    TListNode<T>* newLast = last->GetLeft();
+    newLast->SetRight(root);
+    root->SetLeft(newLast);
+
+    delete last;
+    size--;
+    return value;
+}
+
+template<class T>
+inline T TList<T>::Remove(int index)
+{
+    if (size == 0)
+        throw std::exception();
+    if (index < 0 || index >= static_cast<int>(size))
+        throw std::exception();
+    if (index == 0) {
+        return RemoveStart();
+    }
+    if (index == static_cast<int>(size) - 1) {
+        return RemoveEnd();
+    }
+    TListNode<T>* cur = root;
+    for (int i = 0; i < index; i++) {
+        cur = cur->GetRight();
+    }
+    T value = cur->GetValue();
+    TListNode<T>* prev = cur->GetLeft();
+    TListNode<T>* next = cur->GetRight();
+    prev->SetRight(next);
+    next->SetLeft(prev);
+
+    delete cur;
+    size--;
+    return value;
+}
+
+template<class T>
+inline bool TList<T>::IsEmpty()
+{
+    return size == 0;
+}
+
+template<class T>
+inline bool TList<T>::IsFull()
+{
+    return size == MAX_SIZE;
+}
+
+template<class T>
+inline bool TList<T>::operator==(const TList<T>& l)
+{
+    if (size != l.size) return false;
+    TListNode<T>* cur1 = root;
+    TListNode<T>* cur2 = l.root;
+    for (size_t i = 0; i < size; i++)
+    {
+        if (cur1->GetValue() != cur2->GetValue())
+            return false;
+        cur1 = cur1->GetRight();
+        cur2 = cur2->GetRight();
+    }
+
+    return true;
+}
+
+template<class T>
+inline bool TList<T>::operator!=(const TList<T>& l)
+{
+    return !(*this == l);
+}
+
+template<class T>
+inline T TList<T>::operator[](int index)
+{
+    if (index < 0 || index >= static_cast<int>(size))
+        throw std::exception();
+    TListNode<T>* cur = root;
+    for (int i = 0; i < index; i++)
+    {
+        cur = cur->GetRight();
+    }
+
+    return cur->GetValue();
+}
+
+template<class T>
+inline TList<T> TList<T>::operator+(const TList<T>& l)
+{
+    TList<T> res = *this;
+    TListNode<T>* cur = l.root;
+    for (size_t i = 0; i < l.size; i++)
+    {
+        res.AddEnd(cur->GetValue());
+        cur = cur->GetRight();
+    }
+
+    return res;
+}
+
+template<class T>
+inline TList<T>& TList<T>::operator=(const TList<T>& l)
+{
+    if (this == &l) {
+        return *this;
+    }
+    while (size > 0) {
+        RemoveStart();
+    }
+    TListNode<T>* cur = l.root;
+    for (size_t i = 0; i < l.size; i++)
+    {
+        AddEnd(cur->GetValue());
+        cur = cur->GetRight();
+    }
+
+    return *this;
+}
+
