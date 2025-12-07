@@ -1,0 +1,80 @@
+#pragma once
+
+#include <iostream>
+#include "TListNode.h"
+
+template <class T>
+class TListIterator
+{
+protected:
+    TListNode<T>* node;
+
+public:
+    TListIterator();
+    TListIterator(TListNode<T>* node);
+    TListIterator(const TListIterator<T>& other);
+    TListIterator<T>& operator++(); 
+    TListIterator<T> operator++(int);  
+    TListIterator<T>& operator--();    
+    TListIterator<T> operator--(int);
+    T& operator*();
+    T* operator->();
+    bool operator==(const TListIterator<T>& li) const;
+    bool operator!=(const TListIterator<T>& li) const;
+    TListNode<T>* GetNode() const { return node; }
+};
+
+template<class T>
+inline TListIterator<T>& TListIterator<T>::operator++()
+{
+    if (node != nullptr)
+    {
+        node = node->GetRight();
+    }
+    return *this;
+}
+
+
+template<class T>
+inline TListIterator<T>& TListIterator<T>::operator--()
+{
+    if (node != nullptr)
+    {
+        node = node->GetLeft();
+    }
+    return *this;
+}
+
+template<class T>
+inline TListIterator<T> TListIterator<T>::operator++(int)
+{
+    TListIterator<T> temp = *this;
+    if (node != nullptr)
+    {
+        node = node->GetRight();
+    }
+    return temp;
+}
+
+template<class T>
+inline TListIterator<T> TListIterator<T>::operator--(int)
+{
+    TListIterator<T> temp = *this;
+    if (node != nullptr)
+    {
+        node = node->GetLeft();
+    }
+    return temp;
+}
+
+template<class T>
+inline bool TListIterator<T>::operator==(const TListIterator<T>& li) const
+{
+    return node == li.node;
+}
+
+template<class T>
+inline bool TListIterator<T>::operator!=(const TListIterator<T>& li) const
+{
+    return node != li.node;
+}
